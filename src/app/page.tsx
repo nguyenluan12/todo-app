@@ -1,103 +1,115 @@
-import Image from "next/image";
+'use client';
+import React, { useEffect } from "react";
+import TodoItem from "@/components/TodoItem";
+import { useState } from "react";
+// import { todo } from "node:test";
+import MainContent from "@/components/MainContent";
+import TodoList from "@/components/TodoList";
+import Name from "@/components/Author";
+import TodoMenu from "@/components/TodoMenu";
+import TimeBlock from "@/components/TimeBlock";
 
+type todo = {
+  id: number;
+  title: string;
+  done: boolean;
+
+}
+type topicType = {
+  id: number;
+  name: string;
+  color: string;
+  createdAt: string;
+}[]
+type dataType = {
+  id: number;
+  title: string;
+  note: string;
+  start: string;
+  end: string;
+  categoryId: number;
+};
+type categoriesType = {
+  id: number;
+  name: string;
+  color: string;
+  createdAt: string;
+  tasks: dataType[];
+};
+export async function getData(){
+  const data= await fetch("/api/categories")
+  .then((res) => res.json())
+  .catch((err) => console.error("Error fetching data:", err));
+  console.log("Data fetched:", data);
+ return data;
+}
+export async function addNewTask(title: string, done: boolean, id: number) {
+  await fetch("/api/task", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      title: "Viết báo cáo tuần",
+      note: "Gửi cho sếp vào thứ 6",
+      start: "2025-08-10T09:00:00Z",
+      categoryId: 1 // id của Work
+    }),
+  });
+  console.log("Task added:", { title, done, id });
+}
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  const [todos, setTodos] = useState<todo[]>([]);
+  const [id, setId] = useState(0);
+  const [topic,setTopic] = useState<topicType>();
+  const [data, setData] = useState<dataType[]>([]);
+  const [categories, setCategories] = useState<categoriesType[]>([]);
+  const [reload, setReload] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
+  useEffect(() => {
+    
+    getData().then((fetchedData) => {
+      setCategories(fetchedData);
+    });
+    
+
+  }, [reload]);
+  // useEffect(() => {
+  //   localStorage.setItem('todos', JSON.stringify(todos));
+
+  // }, [todos]);
+  useEffect(() => {
+    if (categories[id] && categories[id].tasks) {
+      setData(categories[id].tasks);
+      setTopic(categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        color: category.color,
+        createdAt: category.createdAt,
+      })));
+    } else {
+      setData([]);
+    }
+  }, [categories, id]);
+  // useEffect(() => {
+  //   localStorage.setItem("topic", JSON.stringify(topic));
+  // }, [topic]);
+
+  return (
+    <main className="size-full min-h-screen border-red-100 flex items-center ">
+      <TodoMenu topic={topic || []} setId = {setId}/>
+      {isPosting ? (
+        <form></form>
+      ) : categories.length !== 0 ? (
+        <MainContent data={data} setReload={setReload} />
+      ) : (
+        <p>Loading...</p>
+      )}      {/* <TodoList setTodos={setTodos} todos={todos} title={title} setTitle={setTitle} value={value} setValue={setValue} done={done} setDone={setDone} id={id} setId={setId}/> */}
+      {/* <MainContent /> */}
+      <TimeBlock setIsPosting = {setIsPosting} />
+      <Name />
+    </main>
   );
 }

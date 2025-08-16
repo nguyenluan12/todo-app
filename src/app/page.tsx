@@ -8,13 +8,9 @@ import TodoList from "@/components/TodoList";
 import Name from "@/components/Author";
 import TodoMenu from "@/components/TodoMenu";
 import TimeBlock from "@/components/TimeBlock";
+import PostingForm from "@/components/PostingForm";
 
-type todo = {
-  id: number;
-  title: string;
-  done: boolean;
 
-}
 type topicType = {
   id: number;
   name: string;
@@ -43,43 +39,37 @@ export async function getData(){
   console.log("Data fetched:", data);
  return data;
 }
-export async function addNewTask(title: string, done: boolean, id: number) {
-  await fetch("/api/task", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      title: "Viết báo cáo tuần",
-      note: "Gửi cho sếp vào thứ 6",
-      start: "2025-08-10T09:00:00Z",
-      categoryId: 1 // id của Work
-    }),
-  });
-  console.log("Task added:", { title, done, id });
-}
+// export async function addNewTask(title: string, done: boolean, id: number) {
+//   await fetch("/api/task", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({
+//       title: "Viết báo cáo tuần",
+//       note: "Gửi cho sếp vào thứ 6",
+//       start: "2025-08-10T09:00:00Z",
+//       categoryId: 1 // id của Work
+//     }),
+//   });
+//   console.log("Task added:", { title, done, id });
+// }
 export default function Home() {
   
 
-  const [todos, setTodos] = useState<todo[]>([]);
   const [id, setId] = useState(0);
   const [topic,setTopic] = useState<topicType>();
   const [data, setData] = useState<dataType[]>([]);
   const [categories, setCategories] = useState<categoriesType[]>([]);
   const [reload, setReload] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+
   useEffect(() => {
-    
     getData().then((fetchedData) => {
       setCategories(fetchedData);
     });
-    
-
-  }, [reload]);
-  // useEffect(() => {
-  //   localStorage.setItem('todos', JSON.stringify(todos));
-
-  // }, [todos]);
+  }, []);
+  
   useEffect(() => {
     if (categories[id] && categories[id].tasks) {
       setData(categories[id].tasks);
@@ -93,15 +83,23 @@ export default function Home() {
       setData([]);
     }
   }, [categories, id]);
-  // useEffect(() => {
-  //   localStorage.setItem("topic", JSON.stringify(topic));
-  // }, [topic]);
-
+  useEffect(() => {
+    if (reload) {
+      getData().then((fetchedData) => {
+        setCategories(fetchedData);
+        setReload(false);
+      });
+    }
+  }, [reload]);
+  useEffect(() => {
+    setIsPosting(false);
+    setReload(!reload);
+  },[id])
   return (
     <main className="size-full min-h-screen border-red-100 flex items-center ">
       <TodoMenu topic={topic || []} setId = {setId}/>
       {isPosting ? (
-        <form></form>
+        <PostingForm categories={categories} />
       ) : categories.length !== 0 ? (
         <MainContent data={data} setReload={setReload} />
       ) : (
